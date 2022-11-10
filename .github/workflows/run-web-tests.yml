@@ -1,0 +1,48 @@
+name: Podcast Web Tests
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  testE2E:
+    name: Run Playwright tests on localhost
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3.1.0
+      - uses: actions/setup-node@v3.5.1
+        with:
+          node-version: "14.x"
+    
+      - name: Start containers
+        run: docker-compose up -d --build
+
+      - name: Install dependencies
+        working-directory: src/Web/E2E
+        run: |
+          npm install
+          npx playwright install --with-deps
+
+      - name: Run Playwright tests
+        working-directory: src/Web/E2E
+        run: |
+          npx playwright test -c playwright.ci.config.ts
+
+      - name: Create test summary
+        uses: test-summary/action@v2.0
+        if: always()
+        with:
+          paths: src/Web/E2E/test-results/junit.xml
+
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v3.1.1
+        if: always()
+        with:
+          name: playwright-report
+          path: src/Web/E2E/playwright-report/
+          retention-days: 30
+
+      - name: Stop containers
+        run: docker-compose down
