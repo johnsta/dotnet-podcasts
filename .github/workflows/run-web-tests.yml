@@ -28,7 +28,7 @@ jobs:
       - name: Run Playwright tests
         working-directory: src/Web/E2E
         run: |
-          npx playwright test -c playwright.ci.config.ts
+          npx playwright test discover -c playwright.ci.config.ts
 
       - name: Create test summary
         uses: test-summary/action@v2.0
